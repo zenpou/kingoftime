@@ -6,4 +6,8 @@ RUN apk add --update \
             chromium \
             chromium-chromedriver
 
+RUN apk --no-cache add tzdata && \
+    cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
+    apk del tzdata
+
 RUN gem install selenium-webdriver
