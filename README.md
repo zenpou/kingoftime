@@ -1,30 +1,30 @@
 # kingoftime
 
-king of time 打刻コマンド
-
+king of time 打刻コマンド  
 会社でking of time を打刻するのが面倒だったので作ったスクリプト
 
-# インストール方法
+## 準備
+* dockerをインストールする
+* .env.sample をcopyして、同階層に.envを作成する
+* .env を開く
+    * KOT_USER_ID, KOT_PSSWORDを設定する
+    * 勤務開始, 終了時間を設定する
+* 下記コマンドを実行
 
-1. ChromeDriver install
-
-http://chromedriver.chromium.org/downloads
-
-2. selenium-webdriver インストール
-
-`gem install selenium-webdriver`
-
-3. 自分のログインIDとパスワードを書いたlogin.ymlを用意
-
-4. IN_TIMEとOUT_TIMEの時間を変更
-
-5. 自分のpath通ってる所にコピーすると更に便利
-
-ex.  `cp ~/Download/kingoftime.rb /usr/local/bin/kingoftime`
-
-# yaml sample login.yml
-
+```bash
+docker-compose build
+docker-compose run --rm kot --help
 ```
-id: "cgu..........."
-pass: "password"
+
+## 実行
+
+```bash
+# 現在時間で記録
+docker-compose run --rm kot
+
+# 退勤時間を指定
+docker-compose run --rm kot --l 21:00
+
+# 遅刻理由を入力する
+docker-compose run --rm kot --i 11:00 --in-biko 通院のため
 ```

@@ -1,28 +1,14 @@
 #!/usr/bin/env ruby
 
-# インストール方法
-# 1. ChromeDriver install
-# http://chromedriver.chromium.org/downloads
-# 2. selenium-webdriver インストール
-# gem install selenium-webdriver
-# 3. 自分のログインIDとパスワードを書いたlogin.ymlを用意
-# 4. IN_TIMEとOUT_TIMEの時間を変更
-# 5. 自分のpath通ってる所にコピーすると更に便利
-#   ex.  cp ~/Download/kingoftime.rb /usr/local/bin/kingoftime
-#
-# yaml sample login.yml
-=begin
-id: "cgu..........."
-pass: "password"
-=end
-
 # 定数で設定
+USER_ID = ENV['KOT_USER_ID']
+PSSWORD = ENV['KOT_PSSWORD']
 # 出社時間
-IN_TIME = "08:00"
+IN_TIME = ENV['IN_TIME']
 # 退社時間
-OUT_TIME = "17:00"
+OUT_TIME = ENV['OUT_TIME']
 # 30分以上遅れた時のデフォルトメッセージ
-OUT_MESSAGE = "業務繁忙のため"
+OUT_MESSAGE = ENV['OUT_MESSAGE']
 
 require 'net/http'
 require 'uri'
@@ -35,7 +21,6 @@ URL = "https://s3.kingtime.jp/admin"
 
 # time round
 ROUND = 15
-
 
 def time_to_min(time)
   hour, min = time.split(":")
@@ -57,11 +42,12 @@ def option_parse
   @date_at = Date.today.strftime("%Y-%m-%d")
   @in_message = ""
   @leave_message = default_outmessage
-  opt.on("-i #{@in_time}", "--intime"){|v| @in_time = v}
-  opt.on("-l #{@leave_time}", "--leavetime"){|v| @leave_time = v}
-  opt.on("-m #{@in_message}", "--in-biko"){|v| @in_message = v}
-  opt.on("-b #{@leave_message}", "--out-biko"){|v| @leave_message = v}
-  opt.on("-d #{@date_at}", "--date"){|v| @date_at = v}
+  opt.on("-d #{@date_at}", "--date", "日付を指定する"){|v| @date_at = v}
+  opt.on("-i #{@in_time}", "--intime", "時間（出勤）を指定する"){|v| @in_time = v}
+  opt.on("-l #{@leave_time}", "--leavetime", "時間（退勤）を指定する"){|v| @leave_time = v}
+  opt.on("-m #{@in_message}", "--in-biko", "備考（出勤）を指定する"){|v| @in_message = v}
+  opt.on("-b #{@leave_message}", "--out-biko", "備考（退勤）を指定する"){|v| @leave_message = v}
+  opt.banner = "note: king of timeの勤怠情報を登録します\n\nOptions:\n"
 
   opt.parse!(ARGV)
   @date_at = Date.parse(@date_at)
@@ -84,14 +70,13 @@ def login
     path = File.expand_path(link, File.dirname(path))
   end
   path = File.expand_path(File.dirname(path))
-  login = YAML.load_file("#{path}/login.yml")
 
   wait.until { @driver.find_element(:id => "login_id").displayed? }
 
   login_id = @driver.find_element id: "login_id"
-  login_id.send_keys login["id"]
+  login_id.send_keys USER_ID
   login_pass = @driver.find_element id: "login_password"
-  login_pass.send_keys login["pass"]
+  login_pass.send_keys PSSWORD
   @driver.find_element(id: "login_button").click
   wait.until { @driver.find_element(class: "htBlock-autoNewLineTable").displayed? }
 end
@@ -154,17 +139,24 @@ def wait
   @wait ||= Selenium::WebDriver::Wait.new(:timeout => 3) # second
 end
 
+# 引数をparse
 option_parse
+
+options = Selenium::WebDriver::Chrome::Options.new
+options.add_argument('--no-sandbox')
+options.add_argument('--headless')
+options.add_argument('--disable-gpu')
+options.add_argument('--window-size=1280,1800')
+
 # headless オプションでヘッドレスブラウザモード
-caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => {args: ["--headless", "--disable-gpu", "window-size=1280x1800"]})
-# caps =  Selenium::WebDriver::Remote::Capabilities.chrome()
+@driver = Selenium::WebDriver.for :chrome, options: options
 
-@driver = Selenium::WebDriver.for :chrome, desired_capabilities: caps
-
+# loginして登録
 login
 select_date
 work_record
 
+# logging
 puts "#{@date_at.strftime("%Y-%m-%d")} in: #{@in_time} leave: #{@leave_time}"
 
 @driver.quit
