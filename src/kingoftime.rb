@@ -1,14 +1,12 @@
 #!/usr/bin/env ruby
 
-# 定数で設定
 USER_ID = ENV['KOT_USER_ID']
 PSSWORD = ENV['KOT_PSSWORD']
-# 出社時間
 IN_TIME = ENV['IN_TIME']
-# 退社時間
 OUT_TIME = ENV['OUT_TIME']
-# 30分以上遅れた時のデフォルトメッセージ
-OUT_MESSAGE = ENV['OUT_MESSAGE']
+OVERTIME_ROUND = ENV['OVERTIME_ROUND'].to_i
+REQUIRED_OVERTIME_REASON_MIN = ENV['REQUIRED_OVERTIME_REASON_MIN'].to_i
+DEFAULT_OVERTIME_REASON = ENV['DEFAULT_OVERTIME_REASON']
 
 require 'net/http'
 require 'uri'
@@ -19,47 +17,70 @@ require 'selenium-webdriver'
 
 URL = "https://s3.kingtime.jp/admin"
 
-# time round
-ROUND = 15
-
-def time_to_min(time)
-  hour, min = time.split(":")
-  hour.to_i * 60 + min.to_i
-end
-
-def default_outmessage
-  if time_to_min(@leave_time) - time_to_min(OUT_TIME) > 30
-    return OUT_MESSAGE
-  end
-  return nil
-end
-
 def option_parse
-  opt = OptionParser.new
-  @in_time = IN_TIME
-  @leave_time = leave_time_make
-
   @date_at = Date.today.strftime("%Y-%m-%d")
+  @in_time = IN_TIME
+  @leave_time = leave_time_make(Time.now)
   @in_message = ""
-  @leave_message = default_outmessage
+  @leave_message = ""
+
+  opt = OptionParser.new
   opt.on("-d #{@date_at}", "--date", "日付を指定する"){|v| @date_at = v}
   opt.on("-i #{@in_time}", "--intime", "時間（出勤）を指定する"){|v| @in_time = v}
   opt.on("-l #{@leave_time}", "--leavetime", "時間（退勤）を指定する"){|v| @leave_time = v}
   opt.on("-m #{@in_message}", "--in-biko", "備考（出勤）を指定する"){|v| @in_message = v}
   opt.on("-b #{@leave_message}", "--out-biko", "備考（退勤）を指定する"){|v| @leave_message = v}
   opt.banner = "note: king of timeの勤怠情報を登録します\n\nOptions:\n"
-
   opt.parse!(ARGV)
+
   @date_at = Date.parse(@date_at)
+  if @leave_message.length == 0 && is_overtime_reason_required(@leave_time)
+    @leave_message = get_overtime_reason
+  end
 end
 
-def leave_time_make
-  now = Time.now
-  min = (now.min / ROUND).to_i * ROUND
+def make_driver
+  options = Selenium::WebDriver::Chrome::Options.new
+  options.add_argument('--no-sandbox')
+  options.add_argument('--headless')
+  options.add_argument('--disable-gpu')
+  options.add_argument('--window-size=1280,1800')
+  
+  # headless オプションでヘッドレスブラウザモード
+  @driver = Selenium::WebDriver.for :chrome, options: options
+end
+
+def time_to_min(time)
+  hour, min = time.split(":")
+  hour.to_i * 60 + min.to_i 
+end
+
+# 残業理由入力必須判定
+def is_overtime_reason_required(leave_time)
+  overtime = time_to_min(leave_time) - time_to_min(OUT_TIME)
+  return overtime > REQUIRED_OVERTIME_REASON_MIN
+end
+
+# 残業理由を返す
+def get_overtime_reason
+  if DEFAULT_OVERTIME_REASON.empty?
+    return stdin_get("残業理由を入力してください")
+  else
+    return DEFAULT_OVERTIME_REASON
+  end
+end
+
+def stdin_get(message)
+  print "残業理由を入力してください"
+  return STDIN.gets.chomp
+end
+
+def leave_time_make(now)
+  min = (now.min / OVERTIME_ROUND).to_i * OVERTIME_ROUND
   "#{"%02d" % now.hour}:#{"%02d" % min}"
 end
 
-
+## browser操作
 def login
   @driver.manage.timeouts.implicit_wait = 30
   @driver.navigate.to URL
@@ -131,6 +152,7 @@ def work_record
     message.send_keys(@leave_message)
   end
 
+
   @driver.find_element(id: "button_01").click
   wait.until { @driver.find_element(class: "htBlock-autoNewLineTable").displayed? }
 end
@@ -139,24 +161,15 @@ def wait
   @wait ||= Selenium::WebDriver::Wait.new(:timeout => 3) # second
 end
 
-# 引数をparse
+## main処理
 option_parse
+make_driver
 
-options = Selenium::WebDriver::Chrome::Options.new
-options.add_argument('--no-sandbox')
-options.add_argument('--headless')
-options.add_argument('--disable-gpu')
-options.add_argument('--window-size=1280,1800')
-
-# headless オプションでヘッドレスブラウザモード
-@driver = Selenium::WebDriver.for :chrome, options: options
-
-# loginして登録
 login
 select_date
 work_record
 
-# logging
-puts "#{@date_at.strftime("%Y-%m-%d")} in: #{@in_time} leave: #{@leave_time}"
+
+puts "#{@date_at.strftime("%Y-%m-%d")} in: #{@in_time} leave: #{@leave_time}, in_biko: #{@in_message} leave_biko: #{@leave_message}"
 
 @driver.quit
