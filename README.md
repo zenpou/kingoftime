@@ -21,10 +21,10 @@ docker-compose run --rm kot --help
 docker-compose run --rm kot
 
 # 退勤時間を指定して登録する
-docker-compose run --rm kot --l 21:00
+docker-compose run --rm kot -l 21:00
 
 # 遅刻理由を入力する
-docker-compose run --rm kot --i 11:00 --in-biko 通院のため
+docker-compose run --rm kot -i 11:00 -m 通院のため
 
 # 日付を指定して登録する
 docker-compose run --rm kot -d 2020-01-27 -i 09:00 -l 18:00
