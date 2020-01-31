@@ -40,3 +40,9 @@ docker-compose run --rm kot -d 2020-01-27 -i 09:00 -l 18:00
 | OVERTIME_ROUND | 10 | 残業時間の丸め(この例だと10分未満切捨て) |
 | REQUIRED_OVERTIME_REASON_MIN | 30 | 残業理由（退勤備考欄）の記入を必須とする残業時間 |
 | DEFAULT_OVERTIME_REASON | とても忙しいため | 自動で設定される残業理由（設定しない場合は対話的に入力を求められる） |
+
+## test
+
+```bash
+docker-compose run --rm kot-test
+```

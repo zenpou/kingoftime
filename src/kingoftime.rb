@@ -20,7 +20,7 @@ URL = "https://s3.kingtime.jp/admin"
 def option_parse
   @date_at = Date.today.strftime("%Y-%m-%d")
   @in_time = IN_TIME
-  @leave_time = leave_time_make
+  @leave_time = leave_time_make(Time.now)
   @in_message = ""
   @leave_message = ""
 
@@ -34,7 +34,7 @@ def option_parse
   opt.parse!(ARGV)
 
   @date_at = Date.parse(@date_at)
-  if @leave_message.length == 0 && is_overtime_reason_required
+  if @leave_message.length == 0 && is_overtime_reason_required(@leave_time)
     @leave_message = get_overtime_reason
   end
 end
@@ -56,24 +56,26 @@ def time_to_min(time)
 end
 
 # 残業理由入力必須判定
-def is_overtime_reason_required
-  overtime = time_to_min(@leave_time) - time_to_min(OUT_TIME)
+def is_overtime_reason_required(leave_time)
+  overtime = time_to_min(leave_time) - time_to_min(OUT_TIME)
   return overtime > REQUIRED_OVERTIME_REASON_MIN
 end
 
 # 残業理由を返す
 def get_overtime_reason
   if DEFAULT_OVERTIME_REASON.empty?
-    print "残業理由を入力してください"
-    name = STDIN.gets.chomp
-    return name
+    return stdin_get("残業理由を入力してください")
   else
     return DEFAULT_OVERTIME_REASON
   end
 end
 
-def leave_time_make
-  now = Time.now
+def stdin_get(message)
+  print "残業理由を入力してください"
+  return STDIN.gets.chomp
+end
+
+def leave_time_make(now)
   min = (now.min / OVERTIME_ROUND).to_i * OVERTIME_ROUND
   "#{"%02d" % now.hour}:#{"%02d" % min}"
 end
