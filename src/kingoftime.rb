@@ -167,7 +167,7 @@ make_driver
 
 login
 select_date
-# work_record
+work_record
 
 
 puts "#{@date_at.strftime("%Y-%m-%d")} in: #{@in_time} leave: #{@leave_time}, in_biko: #{@in_message} leave_biko: #{@leave_message}"
