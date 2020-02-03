@@ -1,28 +1,28 @@
 version: "3.7"
 
 x-ruby-king-of-time:
-    &ruby-king-of-time-service
-    build:
-        context: ./docker
-        dockerfile: Dockerfile
-    working_dir: /var/app
-    volumes:
-        - ./src:/var/app
-    env_file: .env
+  &ruby-king-of-time-service
+  build:
+    context: ./docker
+    dockerfile: Dockerfile
+  working_dir: /var/app
+  volumes:
+    - ./src:/var/app
+  env_file: .env
 
 services:
-    kot:
-        <<: *ruby-king-of-time-service
-        container_name: king-of-time-app
-        entrypoint: ["ruby", "kingoftime.rb"]
-    kot-test:
-        <<: *ruby-king-of-time-service
-        container_name: king-of-time-test
-        environment:
-            - IN_TIME=09:00
-            - OUT_TIME=18:00
-            - OVERTIME_ROUND=15
-            - REQUIRED_OVERTIME_REASON_MIN=30
-            - DEFAULT_OVERTIME_REASON=too busy
-        entrypoint: ["ruby", "test_kingoftime.rb"]
-        # tty: true
+  kot:
+    <<: *ruby-king-of-time-service
+    container_name: king-of-time-app
+    entrypoint: ["ruby", "kingoftime.rb"]
+  kot-test:
+    <<: *ruby-king-of-time-service
+    container_name: king-of-time-test
+    environment:
+      - IN_TIME=09:00
+      - OUT_TIME=18:00
+      - OVERTIME_ROUND=15
+      - REQUIRED_OVERTIME_REASON_MIN=30
+      - DEFAULT_OVERTIME_REASON=too busy
+    entrypoint: ["ruby", "test_kingoftime.rb"]
+    # tty: true
