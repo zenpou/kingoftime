@@ -30,6 +30,7 @@ def option_parse
   opt.on("-l #{@leave_time}", "--leavetime", "時間（退勤）を指定する"){|v| @leave_time = v}
   opt.on("-m #{@in_message}", "--in-biko", "備考（出勤）を指定する"){|v| @in_message = v}
   opt.on("-b #{@leave_message}", "--out-biko", "備考（退勤）を指定する"){|v| @leave_message = v}
+  opt.on("-a #{@auxiliary}", "--auxiliary", "補助項目申請をする"){|v| @auxiliary = v}
   opt.banner = "note: king of timeの勤怠情報を登録します\n\nOptions:\n"
   opt.parse!(ARGV)
 
@@ -157,6 +158,24 @@ def work_record
   wait.until { @driver.find_element(class: "htBlock-autoNewLineTable").displayed? }
 end
 
+def auxiliary
+  unless @auxiliary.length > 0
+    return
+  end
+  tr = tr_find
+  return false unless tr
+  select = tr.find_element(css: "select")
+  select = Selenium::WebDriver::Support::Select.new(select)
+  select.select_by(:text, "補助項目申請")
+  wait.until { @driver.find_element(id: "supplemental_working_record_table").displayed? }
+  table = @driver.find_element(id: "supplemental_working_record_table")
+  select =  Selenium::WebDriver::Support::Select.new(table.find_element(id: "supplemental_working_record_setting_1"))
+  select.select_by(:text, @auxiliary)
+  wait.until { @driver.find_element(id: "drop_down_option_1").displayed? }
+  @driver.find_element(id: "button_01").click
+  wait.until { @driver.find_element(class: "htBlock-autoNewLineTable").displayed? }
+end
+
 def wait
   @wait ||= Selenium::WebDriver::Wait.new(:timeout => 3) # second
 end
@@ -168,6 +187,8 @@ make_driver
 login
 select_date
 work_record
+# 補助項目申請
+auxiliary
 
 
 puts "#{@date_at.strftime("%Y-%m-%d")} in: #{@in_time} leave: #{@leave_time}, in_biko: #{@in_message} leave_biko: #{@leave_message}"

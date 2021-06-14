@@ -28,6 +28,9 @@ docker-compose run --rm kot -i 11:00 -m 通院のため
 
 # 日付を指定して登録する
 docker-compose run --rm kot -d 2020-01-27 -i 09:00 -l 18:00
+
+# 補助項目申請で在宅勤務を打刻と一緒に登録する
+docker-compose run --rm kot -a 在宅勤務
 ```
 
 ## .envの設定値一覧
