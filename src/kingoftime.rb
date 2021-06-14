@@ -159,7 +159,7 @@ def work_record
 end
 
 def auxiliary
-  unless @auxiliary.length > 0
+  if @auxiliary.nil? || @auxiliary.length == 0
     return
   end
   tr = tr_find
