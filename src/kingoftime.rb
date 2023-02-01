@@ -103,6 +103,26 @@ def login
   wait.until { @driver.find_element(class: "htBlock-autoNewLineTable").displayed? }
 end
 
+def month_find(count = 0)
+  return if count > 5
+  h2_block = @driver.find_element(css: '.htBlock-mainContents h2 span')
+  date_at_month = Date.new(@date_at.year, @date_at.month, 1)
+  h2_block.text =~ /^(\d{4}\/\d{2}\/\d{2})/
+  now_month = Date.parse($1)
+  return if now_month == date_at_month
+  button = nil
+  if now_month < date_at_month
+    button = @driver.find_element(id: 'button_next_month')
+  end
+  if now_month > date_at_month
+    button = @driver.find_element(id: 'button_before_month')
+  end
+  button&.click
+  wait.until { @driver.find_element(class: "htBlock-autoNewLineTable").displayed? }
+  month_find(count + 1)
+  return
+end
+
 def tr_find
   date_str = "#{@date_at.strftime("%m/%d")}（#{"日月火水木金土"[@date_at.wday]}）"
 
@@ -185,6 +205,8 @@ option_parse
 make_driver
 
 login
+
+month_find
 select_date
 work_record
 # 補助項目申請
