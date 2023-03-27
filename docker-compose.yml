@@ -15,6 +15,14 @@ services:
     <<: *ruby-king-of-time-service
     container_name: king-of-time-app
     entrypoint: ["ruby", "kingoftime.rb"]
+  kot_punch_attendance:
+    <<: *ruby-king-of-time-service
+    container_name: king-of-time-app
+    entrypoint: ["ruby", "kingoftime_punch.rb", "attendance"]
+  kot_punch_leaving:
+    <<: *ruby-king-of-time-service
+    container_name: king-of-time-app
+    entrypoint: ["ruby", "kingoftime_punch.rb", "leaving"]
   kot-test:
     <<: *ruby-king-of-time-service
     container_name: king-of-time-test
