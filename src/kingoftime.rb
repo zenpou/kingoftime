@@ -10,7 +10,6 @@ DEFAULT_OVERTIME_REASON = ENV['DEFAULT_OVERTIME_REASON']
 
 require 'net/http'
 require 'uri'
-require 'yaml'
 require 'optparse'
 require 'date'
 require 'selenium-webdriver'
@@ -31,6 +30,7 @@ def option_parse
   opt.on("-m #{@in_message}", "--in-biko", "備考（出勤）を指定する"){|v| @in_message = v}
   opt.on("-b #{@leave_message}", "--out-biko", "備考（退勤）を指定する"){|v| @leave_message = v}
   opt.on("-a #{@auxiliary}", "--auxiliary", "補助項目申請をする"){|v| @auxiliary = v}
+  opt.on("-n", "--not-apply", "打刻申請をしない"){|v| @not_apply = v}
   opt.banner = "note: king of timeの勤怠情報を登録します\n\nOptions:\n"
   opt.parse!(ARGV)
 
@@ -207,8 +207,10 @@ make_driver
 login
 
 month_find
-select_date
-work_record
+unless @not_apply
+  select_date
+  work_record
+end
 # 補助項目申請
 auxiliary
 
