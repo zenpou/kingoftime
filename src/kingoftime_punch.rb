@@ -49,9 +49,7 @@ def login
 end
 
 def button_click(button)
-  # element is not clickable at point エラーが出るのでおまじない
-  @driver.save_screenshot("button_click.png")
-  File.delete("button_click.png")
+  sleep(3)
   button.click
 
   wait.until { @driver.find_element(id: "password").displayed? }
