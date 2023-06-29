@@ -87,7 +87,7 @@ def login
   @driver.navigate.to URL
 
   path = __FILE__
-  if File.exists?(path) && File.ftype(path) == 'link'
+  if File.exist?(path) && File.ftype(path) == 'link'
     link = File.readlink(path)
     path = File.expand_path(link, File.dirname(path))
   end

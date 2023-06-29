@@ -1,4 +1,4 @@
-FROM ruby:2.7.0-alpine3.10
+FROM ruby:3.2.0-alpine3.17
 
 RUN gem install selenium-webdriver && \
     apk add --update \
